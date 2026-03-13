@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.env
+*.csv
+model_output/
+*.json
+!n8n_workflows/*.json
