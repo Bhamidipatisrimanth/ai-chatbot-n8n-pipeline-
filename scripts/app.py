@@ -3,7 +3,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from peft import PeftModel
 import torch
 
-BASE_MODEL = "unsloth/tinyllama-chat-bnb-4bit"
+BASE_MODEL = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 ADAPTER = "srimanth23/ai-faq-chatbot"
 
 print("Loading tokenizer...")
@@ -12,7 +12,7 @@ tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL)
 print("Loading base model...")
 model = AutoModelForCausalLM.from_pretrained(
     BASE_MODEL,
-    torch_dtype=torch.float32,
+    dtype=torch.float32,
     device_map="cpu"
 )
 
