@@ -1,18 +1,27 @@
+import gradio as gr
 from transformers import AutoTokenizer, AutoModelForCausalLM
-import torch, gradio as gr
+from peft import PeftModel
+import torch
 
-MODEL_NAME = "srimanth23/ai-faq-chatbot"
+BASE_MODEL = "unsloth/tinyllama-chat-bnb-4bit"
+ADAPTER = "srimanth23/ai-faq-chatbot"
 
-print("Loading model...")
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+print("Loading tokenizer...")
+tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL)
+
+print("Loading base model...")
 model = AutoModelForCausalLM.from_pretrained(
-    MODEL_NAME,
+    BASE_MODEL,
     torch_dtype=torch.float32,
     device_map="cpu"
 )
-print("✅ Model loaded")
 
-def answer_question(question: str) -> str:
+print("Loading your trained adapter...")
+model = PeftModel.from_pretrained(model, ADAPTER)
+model = model.merge_and_unload()
+print("✅ Model ready!")
+
+def answer_question(question):
     prompt = f"### Question: {question}\n### Answer:"
     inputs = tokenizer(prompt, return_tensors="pt")
     with torch.no_grad():
@@ -23,17 +32,17 @@ def answer_question(question: str) -> str:
             do_sample=True,
             pad_token_id=tokenizer.eos_token_id
         )
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    if "### Answer:" in response:
-        response = response.split("### Answer:")[-1].strip()
-    return response
+    result = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    if "### Answer:" in result:
+        result = result.split("### Answer:")[-1].strip()
+    return result
 
 demo = gr.Interface(
     fn=answer_question,
-    inputs=gr.Textbox(label="Ask a question"),
+    inputs=gr.Textbox(label="Ask a question", placeholder="What is machine learning?"),
     outputs=gr.Textbox(label="Answer"),
-    title="AI FAQ Chatbot",
+    title="🤖 AI FAQ Chatbot",
     description="Ask any AI/ML question!"
 )
 
-demo.launch(server_name="0.0.0.0", server_port=7860)
+demo.launch()
