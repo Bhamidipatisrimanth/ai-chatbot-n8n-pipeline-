@@ -1,0 +1,40 @@
+{
+  "name": "AI FAQ Telegram Chatbot",
+  "nodes": [
+    {
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "parameters": {
+        "updates": ["message"]
+      }
+    },
+    {
+      "name": "HTTP Request - POST",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "https://srimanth23-ai-faq-chatbot-api.hf.space/gradio_api/call/answer_question",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "{\n  \"data\": [\"{{ $json.message.text }}\"]\n}"
+      }
+    },
+    {
+      "name": "HTTP Request - GET",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "GET",
+        "url": "https://srimanth23-ai-faq-chatbot-api.hf.space/gradio_api/call/answer_question/{{ $json.event_id }}"
+      }
+    },
+    {
+      "name": "Telegram Send Message",
+      "type": "n8n-nodes-base.telegram",
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.data }}"
+      }
+    }
+  ]
+}
